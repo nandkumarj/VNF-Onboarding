@@ -39,7 +39,7 @@ import hashlib
 import time
 from datetime import datetime
 
-TEMPLATES_DIR = './templates'
+TEMPLATES_DIR = '../templates'
 TEMPLATES = {'OpenStack': 'OS-template.yaml',
              'TOSCA_OpenStack': 'OS-TOSCA-template.yaml',
              'CUSTOM_FLAVOR': 'CUSTOM-FLAVOR-template.yaml',

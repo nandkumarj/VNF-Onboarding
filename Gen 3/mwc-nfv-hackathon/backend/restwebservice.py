@@ -37,7 +37,6 @@ from sendemail import sendMail,draft_mail_text
 from flask_jwt import JWT, jwt_required, current_identity
 from  catalog import _getVIMs,_getOrchsforVIM,_getInputHeads,_getInputHeadDetails
 
-import resources
 from prefixmiddleware import PrefixMiddleware
 from flask import Flask, request
 from flask_restful import Resource, Api
