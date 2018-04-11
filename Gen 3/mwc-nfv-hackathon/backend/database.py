@@ -68,7 +68,7 @@ def db_check_credentials(username,password):
         db_password = sha256.verify(password,rec[1])
         print "Verified password",db_password,rec[1]
         if rec[0] ==  username and db_password == True:
-           print "db_check_credentials:User {} is Authenticated".format(username)
+           print "db_check_credentials:User is Authenticated",username
            return True
     print "Did not find user",username
     cursor.close()
@@ -96,6 +96,7 @@ def db_user_signup(username,password,emailid):
     cursor = conn.cursor()
     vnf_params = db_config('database.ini','vnf_onboarding')
     vnf_dbname = vnf_params['dbname']
+    print "db_user_signup:",vnf_dbname
     #cursor.execute("SELECT datname FROM pg_catalog.pg_database WHERE datname = 'vnf_onboarding_tool_db'")
     cursor.execute("SELECT datname FROM pg_catalog.pg_database WHERE datname = %(dname)s",{'dname':vnf_dbname})
     records = cursor.fetchall()
@@ -146,7 +147,7 @@ def db_connect_tool_database():
     else:
        print "Database table {} does NOT exist".format(table_name)
        try:		
-          create_table = "CREATE TABLE {} (username varchar(18) UNIQUE not null,  password text not null , emailid varchar(50) UNIQUE  not null)".format(table_name)
+          create_table = "CREATE TABLE {} (username varchar(18) UNIQUE not null,  password text not null , emailid varchar(50) UNIQUE  not null,token text )".format(table_name)
           #table_data = (AsIs(table_name))
           print("Creating Table %s",table_name)
           print("Query %s",create_table)
@@ -329,8 +330,53 @@ def generate_and_updatepassword(credentials):
     credentials['password'] = randompassword
     return True
 
+def db_delete_token_from_user(user):
+    conn = db_connect()
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cursor = conn.cursor()
+    db_table = get_config_param('database.ini','Details','table')
+    delete_query = "UPDATE {} SET token = null where ({}.username = '{}')".format(db_table,db_table,user)
+    print "delete token query:",delete_query
+    try:
+        cursor.execute(delete_query)
+    except:
+        print "update user with token: Cannont execute delete token from user command"
+    cursor.close()
+    conn.close()
+    return True
 
 
+def db_update_user_with_token(user,token):
+    conn = db_connect()
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cursor = conn.cursor()
+    db_table = get_config_param('database.ini','Details','table')
+    update_query = "UPDATE {} SET token = '{}' WHERE({}.username = '{}')".format(db_table,token,db_table,user)
+    print "update token query",update_query
+    try:
+        cursor.execute(update_query)
+    except:
+        print "update user with token: Cannont execute update user with toeken query command"
+    cursor.close()
+
+def db_check_token(user):
+    conn = db_connect()
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cursor = conn.cursor()
+    db_table = get_config_param('database.ini','Details','table')
+    query = "SELECT token from {} WHERE({}.username = '{}')".format(db_table,db_table,user)
+    print "check token",query
+    try:
+        cursor.execute(query)
+    except:
+        print "check token: Cannont execute check toeken query "
+    records = cursor.fetchall()
+    print "check token",records 
+    print "check token",records[0][0] 
+    return records[0][0]
+    cursor.close()
+    conn.close()
+ 
 
 def db_connect():
     vnf_params = db_config('database.ini','vnf_onboarding')
