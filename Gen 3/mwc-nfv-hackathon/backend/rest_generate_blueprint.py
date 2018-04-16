@@ -416,6 +416,7 @@ def get_orch_types(params):
     
 	#if params['orch_type'] == 'Cloudify 4.0':
 	#   orch = 'Cloudify 3.4'
+        #print "Got orchestrator: {} from inputs".format(orch)
 	   
 	return orch 
 
@@ -552,7 +553,7 @@ def rest_create_blueprint_package(inputs):
         print "The input parameter is ", get_orch_types(inputs['params']) 
         #print "The git flag is ", get_git_flag(inputs['params']) 
         print "The input list parameter is ", inputs['params'] 
-        #commit_comment=get_env_types(inputs['params']) + '_' + get_orch_types(inputs['params']) + '_'+ get_vnf_types(inputs['params'])
+        commit_comment=get_env_types(inputs['params']) + '_' + get_orch_types(inputs['params']) + '_'+ get_vnf_types(inputs['params'])
         orch_name= get_orch_types(inputs['params'])
         env_name= get_env_types(inputs['params'])
         vnf_name= get_vnf_types(inputs['params'])
@@ -562,12 +563,12 @@ def rest_create_blueprint_package(inputs):
                  generate_flavor_blueprint(inputs['params'], workdir, name)
             copy_inputs_template(inputs['params'], workdir)
             output_file = create_package(name, workdir)
-            #print "The git flag outside ", get_git_flag(inputs['params']) 
-            #if get_git_flag(inputs['params']) == True: 
-             #   print "The git flag inside ", get_git_flag(inputs['params']) 
-             #   print("params for git upload : output file = %s\n, workdir = %s\n,orch_name = %s\n,commit_comment = %s\n",output_file, workdir, orch_name, commit_comment)
+            print "Cloudify:The git flag outside ", get_git_flag(inputs['params']) 
+            if get_git_flag(inputs['params']) == 'True': 
+                print "The git flag inside ", get_git_flag(inputs['params']) 
+                print("params for git upload : output file = %s\n, workdir = %s\n,orch_name = %s\n,commit_comment = %s\n",output_file, workdir, orch_name, commit_comment)
 #            #    Process=subprocess.call(['./git_upload.sh', output_file, workdir, orch_name, commit_comment])
-             #   Process=subprocess.call(['./git_upload.sh', output_file, workdir, commit_comment, orch_name, env_name, vnf_name])
+                Process=subprocess.call(['./git_upload.sh', output_file, workdir, commit_comment, orch_name, env_name, vnf_name])
 #            #    Process=subprocess.call(['./git_upload.sh', output_file, workdir])  
 #            # Process=subprocess.call(['./git_upload.sh', output_file, workdir])
             return output_file, workdir
@@ -576,7 +577,7 @@ def rest_create_blueprint_package(inputs):
            nsd_package=create_osm_nsd_package(inputs, name, workdir)
            output_file = create_package(name, workdir)
            print "The git flag outside ", get_git_flag(inputs['params']) 
-           if get_git_flag(inputs['params']) == True: 
+           if get_git_flag(inputs['params']) == 'True': 
                print "The git flag inside ", get_git_flag(inputs['params']) 
 #               Process=subprocess.call(['./git_upload.sh', output_file, workdir])
                Process=subprocess.call(['./git_upload.sh', output_file, workdir, commit_comment, orch_name, env_name, vnf_name])
@@ -589,10 +590,10 @@ def rest_create_blueprint_package(inputs):
 	   output_file = create_package(name, workdir)
 	   return output_file, workdir
         elif get_orch_types(inputs['params']) == 'TOSCA 1.1':
-           print "Generating Blueprint from TOSCA"
+           print "Generating Blueprint from TOSCA 1.1"
            generate_standard_tosca_blueprint(inputs['params'], workdir, name)
            if get_env_types(inputs['params']) == 'OpenStack':
-               print "Dealing with Flavors in TOSCA"
+               print "Dealing with Flavors in TOSCA 1.1"
                if check_key('flavor',inputs['params']) and  get_flavor_type(inputs['params']) == 'Custom Flavor':
                    generate_flavor_blueprint(inputs['params'], workdir, name)
            copy_inputs_template(inputs['params'], workdir)
@@ -601,7 +602,7 @@ def rest_create_blueprint_package(inputs):
            print "Got the working directory",workdir 
 #             Process=subprocess.Popen('./git_upload.sh %s' % (output_file), shell=True) 
            print "The git flag outside ", get_git_flag(inputs['params']) 
-           if get_git_flag(inputs['params']) == True: 
+           if get_git_flag(inputs['params']) == 'True': 
                 print "The git flag inside ", get_git_flag(inputs['params']) 
                 Process=subprocess.call(['./git_upload.sh', output_file, workdir, commit_comment, orch_name, env_name])
 #           Process=subprocess.call(['./git_upload.sh', output_file, workdir])
@@ -615,7 +616,7 @@ if __name__ == '__main__':
     args = parse_argv()
     with open(args.inputs) as f:
         inputs = yaml.load(f.read())
-        output_file, workdir = create_blueprint_package(inputs)
+        output_file, workdir = rest_create_blueprint_package(inputs)
 #        print "Got the output file", output_file
 #        Process=subprocess.Popen('./git_upload.sh %s' % (str(output_file)))
        # subprocess.call(["git_upload.sh","output_file"],shell=True)

@@ -24,15 +24,15 @@
 ############################################################################
 
 catalog = {'VIMS' : ['vCloud Director','OpenStack'],
-	    'Orchestrators' : { 'vCloud Director' : ['OSM 3.0','Cloudify 3.4','Cloudify 4.0','RIFT.ware 5.3','TOSCA'],
-			       'OpenStack' : ['OSM 3.0','Cloudify 3.4','Cloudify 4.0','RIFT.ware 5.3','TOSCA','Heat']
+	    'Orchestrators' : { 'vCloud Director' : ['OSM 3.0','Cloudify 3.4','Cloudify 4.0','RIFT.ware 5.3','TOSCA 1.1'],
+			       'OpenStack' : ['OSM 3.0','Cloudify 3.4','Cloudify 4.0','RIFT.ware 5.3','TOSCA 1.1','Heat']
 			      },
 
             'VNF Types' : {
 		             'vCloud Director:OSM 3.0'         : ['vRouter','Firewall','LoadBalancer','Qos','vEPC','vMS','Others'],
 		             'vCloud Director:Cloudify 3.4'    : ['vRouter','Firewall','LoadBalancer','Qos','vEPC','vMS','Others'],
 			     'vCloud Director:Cloudify 4.0'    : ['vRouter','Firewall','LoadBalancer','Qos','vEPC','vMS','Others'],
-			     'vCloud Director:TOSCA'           : ['vRouter','Firewall','LoadBalancer','Qos','vEPC','vMS','Others'],
+			     'vCloud Director:TOSCA 1.1'           : ['vRouter','Firewall','LoadBalancer','Qos','vEPC','vMS','Others'],
 		             'OpenStack:OSM 3.0'	       : ['vRouter','Firewall','LoadBalancer','Qos','vEPC','vMS','Others'],
 	                     'OpenStack:Cloudify 3.4'	       : ['vRouter','Firewall','LoadBalancer','Qos','vEPC','vMS','Others'],
 			     'OpenStack:Cloudify 4.0'          : ['vRouter','Firewall','LoadBalancer','Qos','vEPC','vMS','Others'],
@@ -41,7 +41,17 @@ catalog = {'VIMS' : ['vCloud Director','OpenStack'],
 
              },
 
-            'InputHeads' : { 'vCloud Director:OSM 3.0' : ['VNF Parameters','NIC Parameters','EPA Parameters','Upload Scripts'] } ,
+            'InputHeads' : { 'vCloud Director:OSM 3.0' : ['VNF Parameters','NIC Parameters','EPA Parameters','Upload Scripts'],
+			     'vCloud Director:Cloudify 3.4' : ['VNF Parameters','NIC Parameters','Upload Scripts'],
+			     'vCloud Director:Cloudify 4.0' : ['VNF Parameters','NIC Parameters','Upload Scripts'],
+		             'vCloud Director:TOSCA 1.1' : ['VNF Parameters','NIC Parameters','EPA Parameters','Upload Scripts'],
+			     'OpenStack:OSM 3.0' : ['VNF Parameters','NIC Parameters','EPA Parameters','Upload Scripts'],
+			     'OpenStack:Cloudify 3.4' : ['VNF Parameters','NIC Parameters','EPA Parameters','Upload Scripts'],
+  		             'OpenStack:Cloudify 4.0' : ['VNF Parameters','NIC Parameters','EPA Parameters','Upload Scripts'],
+			     'OpenStack:TOSCA 1.1' : ['VNF Parameters','NIC Parameters','EPA Parameters','Upload Scripts'],		   		                         'OpenStack:RIFT.ware 5.3' : ['VNF Parameters','NIC Parameters','EPA Parameters','Upload Scripts']		   		
+
+
+ } ,
 
 
             'VNF Parameters' : { 'vCloud Director:OSM 3.0' :[ 
@@ -77,7 +87,7 @@ catalog = {'VIMS' : ['vCloud Director','OpenStack'],
 				                        ['disk','mandatory','Disk Storage. Minimum value : 10 GB']
 			             ], 
 
-                                   'vCloud Director:TOSCA' : [
+                                   'vCloud Director:TOSCA 1.1' : [
                                                         ['env_type','mandatory','VIM type: vCloud Director/OpenStack for which to generate a blueprint'],
                                                         ['vnf_type','mandatory','VNF type: VNF type for which blueprint to generate a blueprint'],
                                                         ['vnf_name', 'mandatory', 'User provided vnf name. Should be string  with no spaces'],
@@ -125,7 +135,7 @@ catalog = {'VIMS' : ['vCloud Director','OpenStack'],
 ],
 
 
-                                  'OpenStack:TOSCA' : [
+                                  'OpenStack:TOSCA 1.1' : [
                                               ['env_type','mandatory','VIM type: vCloud Director/OpenStack for which to generate a blueprint'],
                                               ['vnf_type','mandatory','VNF type: VNF type for which blueprint to generate a blueprint'],
                                               ['vnf_name', 'mandatory', 'User provided vnf name. Should be string  with no spaces'],
@@ -168,13 +178,13 @@ catalog = {'VIMS' : ['vCloud Director','OpenStack'],
                                                         ['Interfaces{}_name','mandatory', 'Allowed Values Default']
 				],
 
-				'vCloud Director:TOSCA' : [['nic{}_name', 'mandatory', 'Network Interface Name. Max 6 NICs supported. NIC no to be mentioned at {}' ],
+				'vCloud Director:TOSCA 1.1' : [['nic{}_name', 'mandatory', 'Network Interface Name. Max 6 NICs supported. NIC no to be mentioned at {}' ],
                                                             ['Interfaces{}_name','mandatory', 'Allowed Values E1000,VNXNET3']
                                                            ],
 
 
 
-                                'OpenStack:TOSCA' : [
+                                'OpenStack:TOSCA 1.1' : [
                                                         ['nic{}_name', 'mandatory', 'Network Interface Name. Max 6 NICs supported. NIC no to be mentioned at {}' ],
                                                         ['Interfaces{}_name','mandatory', 'Allowed Values VIRTIO,PCI-PASSTHROUGH,SR-IOV,E1000,VMXNET3']
              ],
@@ -200,7 +210,7 @@ catalog = {'VIMS' : ['vCloud Director','OpenStack'],
 
 							   ],
 
-                              'vCloud Director:TOSCA' : [
+                              'vCloud Director:TOSCA 1.1' : [
                                                            ['memory_reservation','optional', 'Allowed values True or False'],
                                                            ['latency_sensitivity','optional', 'Allowed values True of False'],
                                                            ['numa_affinity','optional', 'Allowed values True or False'],
@@ -221,7 +231,7 @@ catalog = {'VIMS' : ['vCloud Director','OpenStack'],
 								['number_numa_node','optional', 'To be set only if numa_affinity is set']	
 							] ,
 
-			       'OpenStack:TOSCA' :     [
+			       'OpenStack:TOSCA 1.1' :     [
                                                                 ['memory_reservation','optional', 'Allowed values True or False'],
                                                                 ['latency_sensitivity','optional', 'Allowed values True or False'],
                                                                 ['numa_affinity','optional', 'Allowed values True or False'],
@@ -271,13 +281,13 @@ catalog = {'VIMS' : ['vCloud Director','OpenStack'],
                                                                    [ 'delete','optional','Deletion script. Input type : File']
                                                                 ],
                                 
-				'vCloud Director:TOSCA' : [ [ 'create','optional','Initialization script. Input type : File'],
+				'vCloud Director:TOSCA 1.1' : [ [ 'create','optional','Initialization script. Input type : File'],
                                    			    [ 'config','optional','Configuration script. Input type : File'],
                                    			    [ 'delete','optional','Deletion script. Input type : File']
                                                           ],
 
 
-				'OpenStack:TOSCA' : [ 
+				'OpenStack:TOSCA 1.1' : [ 
 								[ 'create','optional','Initialization script. Input type : File'],
 				                                [ 'config','optional','Configuration script. Input type : File'],
 					                        [ 'delete','optional','Deletion script. Input type : File']
