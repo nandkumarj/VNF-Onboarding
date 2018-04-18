@@ -119,6 +119,36 @@ def RegisterUser():
         return jsonify({'Failure':"User or Email ID exists", "status": "200"}) 
 
 
+@app.route('/v1/forgetpassword', methods=['POST'])
+
+def forgetpassword():
+   if request.method == 'POST':
+      if request.data:
+         print "Received forgetpassword request",request.data
+         #inputs  = request.get_json()
+         inputs = json.loads(request.data)
+         print "Forgetpassword",inputs
+         if 'username' in inputs.keys():
+             status = db_generate_newpassword(inputs)
+             if status == 1:
+                print "forgetpassword:user does not exist", status
+                return jsonify({'Error':"UserName {} does not exist in our records".format(inputs['username']),'status' : '200'})
+             elif status == 0:
+                mail_text = ""
+                if inputs['username']:
+                   print "after updating password",inputs
+                   mail_text = draft_mail_text("Forget Password",inputs['username'],inputs['password'])
+                   print "forget password:",mail_text
+                   sendMail([inputs['emailaddress']],"Rest VNF Onboarding New Password",mail_text)
+                   print "forgetpassword:new password set",status
+                return jsonify({'Success': 'New password generated for user {}'.format(inputs['username']),'status':'200'})
+         else:
+	     return jsonify({"Error" : 'Bad Request. Required parameter username not provided','status':'400'})	
+      else:
+           return jsonify({"Error": 'Bad Request. Request payload empty','status':'400'})
+
+
+
 def token_required(f):
     @wraps(f)
     def decorated(*args,**kwargs):
@@ -220,24 +250,6 @@ def getInputHeadDetails(currentUser):
             return jsonify({"Failure": "Could not find {} Details for {} + {}".format(inputHead,vim,orch)})
 
 
-
-@app.route('/v1/generateBlueprint',methods = ['POST'])
-@token_required
-def generateblueprint(currentUser):
-    if request.method == 'POST':
-       inputs = request.get_json(request.data)
-       #app.logger.warning("Input Received: %s\n",inputs)
-       #app.logger.warning("username is : %s\n",inputs['params']['username'])
-
-       print("Inputs Received: %s\n",inputs)
-       output_file, workdir = create_blueprint_package(inputs)
-       print("backend:workdir=%s\n",workdir)
-       resp = send_from_directory(directory=os.path.dirname(workdir),
-                               filename=os.path.basename(output_file),
-                               as_attachment=True,
-                               attachment_filename=os.path.basename(output_file))
-       cleanup(os.path.dirname(workdir))
-       return resp
 
 
 @app.route('/v1/blueprint',methods=['POST'])
