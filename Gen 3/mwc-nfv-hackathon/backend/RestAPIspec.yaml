@@ -1,0 +1,1047 @@
+
+openapi: 3.0.0
+info:
+  title: VNF Onboarding REST API
+  version: 1.0.0
+  license:
+    name: Apache 2.0
+host: vnfonboarding.vmware.com
+basePath: /api/v1
+schemes:
+  - http
+paths:
+  /Login:
+    post:
+      tags:
+        - Login
+      summary: Authenticate user credentials
+      description: Returns token for authenticated user
+      parameters: 
+        - in: header
+          name: Content-Type
+          required: true
+          description: Content-Type of the request. Should be 'application/json'
+          schema:
+            type: string
+        - in: header
+          name: Accept
+          required: true
+          description: Response Format that caller expects. Should be 'application/json'
+          schema:
+            type: string
+      requestBody:
+        description: request body should be in json format with username and password as keys and their values
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:  
+        '200': 
+          description: Success Response for Login Request
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+           description: response in case of malformed request body, invalid request message parameters
+           content:
+             application/json:
+               schema:
+                 allOf:
+                  - $ref: '#/components/schemas/LoginErrorEmptyRequest'
+                  - $ref: '#/components/schemas/LoginErrorIncompleteRequestBody'
+        '415':
+           description: response in case header has content type other than 'application/json'
+           content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ContentTypeError'
+        '406':
+           description: response in case header has Accept type other than 'appliction/json'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/AcceptTypeError'
+                
+                
+              
+                      
+  /Logout:
+    post:
+      tags:
+        - Logout
+      summary: Logout user
+      description: Logout user 
+      parameters:
+        - in: header
+          name: x-access-token
+          description: token issued after successful login
+          schema:
+            type: string
+        - in: header
+          name: Content-Type
+          required: true
+          description: Content-Type of the request. Should be 'application/json'
+          schema:
+            type: string
+        - in: header
+          name: Accept
+          required: true
+          description: Response Format that caller expects. Should be 'application/json'
+          schema:
+            type: string  
+      responses:
+       '200':
+          description: Success Response for Logout Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+       '400':
+          description: Response when token is missing
+          content:
+             application/json:
+               schema:
+                  $ref: '#/components/schemas/TokenMissing'
+       '401':
+          description: Response when Logout request fails
+          content:
+             application/json:
+               schema:
+                  $ref: '#/components/schemas/AuthError'
+       '403':
+           description: Response when user is already logged out. And is not authorized to perform operation
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/LoggedOutError'
+       '415':
+          description: response in case header has content type other than 'application/json'
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/ContentTypeError'
+       '406':
+           description: response in case header has Accept type other than 'appliction/json'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/AcceptTypeError'          
+        
+  /RegisterUser:
+    post:
+      tags:
+        - RegisterUser
+      summary: Register New User
+      description: Registers new user
+      requestBody:
+        description: Request Body should be in json form with username,emailaddress,password and confirmpassword as keys and their values
+        required: true
+        content: 
+         application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterNewUserRequest'
+      responses:
+        '200':
+           description: Success Response for Register New user request
+           content:
+             application/json:
+               schema:
+                  $ref: '#/components/schemas/RegisterNewUserResponse'
+        '400':
+           description: Incorrect parameters in the request body
+           content:
+             application/json:
+                schema:
+                   $ref: '#/components/schemas/RegisterUserIncorrectParams'   
+        '401':
+           description: Response when RegisterNewUser request fails because token is invalid or expired or is missing
+           content:
+              application/json:
+                 schema:
+                   anyOf:
+                   -  $ref: '#/components/schemas/AuthError'
+                   -  $ref: '#/components/schemas/TokenMissing'
+        '403':
+           description: Response when user is already logged out. And is not authorized to perform operation
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/LoggedOutError'
+        '415':
+           description: response in case header has content type other than 'application/json'
+           content:
+             application/json:
+               schema:
+                  $ref: '#/components/schemas/ContentTypeError'
+        '406':
+           description: response in case header has Accept type other than 'appliction/json'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/AcceptTypeError'
+        '409':
+           description: Response when user to be registered already exists
+           content:
+             application/json:
+               schema:
+                  $ref: '#/components/schemas/UserExistsError'
+                
+  /ForgetPassword:
+     post:
+      tags:
+         - ForgetPassword
+      summary: Generate New Password for the user
+      description: 
+      parameters: 
+        - in: header
+          name: Content-Type
+          required: true
+          description: Content-Type of the request. Should be 'application/json'
+          schema:
+            type: string
+        - in: header
+          name: Accept
+          required: true
+          description: Response Format that caller expects. Should be 'application/json'
+          schema:
+            type: string
+            
+      requestBody:
+        description: Request body for ForgetPassword Request should be in json form with either username or emailaddress as key and its values
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgetPasswordRequest'
+      responses:
+        '200':
+          description: Success Response for ForgetPassword Request
+          content:
+             application/json:
+               schema:
+                  $ref: '#/components/schemas/ForgetPasswordResponse'
+        '400':
+            description: Failure Response for ForgetPassword Request
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ForgetPasswordFailureResponse1'
+        
+        '415':
+           description: response in case header has content type other than 'application/json'
+           content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ContentTypeError'
+        '406':
+           description: response in case header has Accept type other than 'appliction/json'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/AcceptTypeError'
+                          
+  /VIMS:
+    get:
+      tags:
+        - VIMS
+      summary: Get list of support VIMs
+      description : API that provides list of VIMS supported by VNF Onboarding Application
+      parameters:
+        - in: header
+          name: x-access-token
+          description: token issued after successful login
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Content-Type
+          required: true
+          description: Content-Type of the request. Should be 'application/json'
+          schema:
+            type: string
+        - in: header
+          name: Accept
+          required: true
+          description: Response Format that caller expects. Should be 'application/json'
+          schema:
+            type: string
+            
+      responses:
+        '200':
+          description: Success Response for VIMs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VIMSResponse'
+        '400':
+          description: Response when token is missing
+          content:
+             application/json:
+               schema:
+                  $ref: '#/components/schemas/TokenMissing'
+                  
+        '401':
+          description: Response when Logout request fails
+          content:
+             application/json:
+               schema:
+                  $ref: '#/components/schemas/AuthError'
+        '403':
+           description: Response when user is already logged out. And is not authorized to perform operation
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/LoggedOutError'        
+        '415':
+           description: response in case header has content type other than 'application/json'
+           content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ContentTypeError'
+        '406':
+           description: response in case header has Accept type other than 'appliction/json'
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/AcceptTypeError'
+                                  
+  /orchestrators:
+     get:
+        tags:
+          - Orchestrator
+        summary: Get list of support orchestrator for a VIM
+        description: provides list of supported orchestrators for a vim
+        parameters:
+          - in: header
+            name: x-access-token
+            required: true
+            description: token issued after successful login
+            schema:
+              type: string
+          - in: header
+            name: Content-Type
+            required: true
+            description: Content-Type of the request. Should be 'application/json'
+            schema:
+               type: string
+               
+          - in: header
+            name: Accept
+            required: true
+            description: Response Format that caller expects. Should be 'application/json'
+            schema:
+               type: string
+               
+          - in: query
+            name: vim
+            description: Name of the VIM(Virtualized Infrasturcture Manager).
+            required: true
+            schema:
+              type: string
+              
+        responses:
+          '200':
+             description: List of orchestrators
+             content:
+               application/json: 
+                 schema:
+                    $ref: '#/components/schemas/OrchestratorsResponse'
+          '400':
+             description: Response when token or request parameter is missing
+             content:
+               application/json:
+                  schema:
+                     anyOf:
+                       - $ref: '#/components/schemas/TokenMissing'
+                       - $ref: '#/components/schemas/MissingVIMArg'
+                  
+          '401':
+             description: Response when token is missing or expired
+             content:
+                application/json:
+                  schema:
+                     $ref: '#/components/schemas/AuthError'
+          '403':
+             description: Response when user is already logged out. And is not authorized to perform operation
+             content:
+               application/json:
+                  schema:
+                    $ref: '#/components/schemas/LoggedOutError'        
+          '415':
+              description: response in case header has content type other than 'application/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/ContentTypeError'
+          '406':
+              description: response in case header has Accept type other than 'appliction/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/AcceptTypeError'
+                                            
+  /VNF_Types:
+      get:
+        tags:
+          - VNF Types
+        summary: Get the list of VNF types supported for a VIM and Orchestrator
+        description: Provides the list of supported VNF Types
+        parameters:
+          - in: header
+            name: x-access-token
+            required: true
+            description: token issued after successful login
+            schema:
+              type: string
+              
+          - in: header
+            name: Content-Type
+            required: true
+            description: Content-Type of the request. Should be 'application/json'
+            schema:
+               type: string
+               
+          - in: header
+            name: Accept
+            required: true
+            description: Response Format that caller expects. Should be 'application/json'
+            schema:
+               type: string
+              
+          - in: query
+            name: vim
+            required: true
+            description: Name of the VIM(Virtualized Infrasturcture Manager). 
+            schema:
+              type: string
+              
+          - in: query
+            name: orchestrator
+            required: true
+            description: Name of the Orchestrator
+            schema:
+              type: string
+        responses:
+          '200':
+            description: List of VNF Types
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/VNFTypesResponse'
+          '400':
+             description: Response when token is missing
+             content:
+               application/json:
+                 schema:
+                    $ref: '#/components/schemas/TokenMissing'
+                  
+          '401':
+             description: Response when token is invalid or expired
+             content:
+                application/json:
+                  schema:
+                     $ref: '#/components/schemas/AuthError'
+          '403':
+             description: Response when user is already logged out. And is not authorized to perform operation
+             content:
+               application/json:
+                  schema:
+                    $ref: '#/components/schemas/LoggedOutError'        
+          '415':
+              description: response in case header has content type other than 'application/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/ContentTypeError'
+          '406':
+              description: response in case header has Accept type other than 'appliction/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/AcceptTypeError'
+                                                    
+  /InputHeads:
+     get:
+        tags:
+         - InputHeads
+        summary: Get the list of Input Heads 
+        description: Provides list of InputHeads
+        parameters:
+           - in: header
+             name: x-access-token
+             required: true
+             description: token issued after successful login
+             schema:
+               type: string
+               
+           - in: header
+             name: Content-Type
+             required: true
+             description: Content-Type of the request. Should be 'application/json'
+             schema:
+               type: string
+               
+           - in: header
+             name: Accept
+             required: true
+             description: Response Format that caller expects. Should be 'application/json'
+             schema:
+               type: string
+               
+           - in: query
+             name: vim
+             description: Name of the VIM(Virtualized Infrasturcture Manager).
+             required: true
+             schema:
+              type: string
+           - in: query
+             name: orch
+             description: Name of the Orchestrator
+             required: true
+             schema:
+               type: string
+        responses:
+          '200': 
+             description: List of InputHeads
+             content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/InputHeadsResponse'
+          '400':
+             description: Response when token is missing or request params are incorrect
+             content:
+               application/json:
+                 schema:
+                   oneOf:
+                     - $ref: '#/components/schemas/TokenMissing'
+                     - $ref: '#/components/schemas/MissingInputHeadArg'
+                  
+          '401':
+             description: Response when token is invalid or expired
+             content:
+                application/json:
+                  schema:
+                     $ref: '#/components/schemas/AuthError'
+          '403':
+             description: Response when user is already logged out. And is not authorized to perform operation
+             content:
+               application/json:
+                  schema:
+                    $ref: '#/components/schemas/LoggedOutError'        
+          '415':
+              description: response in case header has content type other than 'application/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/ContentTypeError'
+          '406':
+              description: response in case header has Accept type other than 'appliction/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/AcceptTypeError'          
+  /InputHeadDetails:
+      get:
+        tags:
+          - InputHeadDetails
+        summary: Get the list of InputHeadDetails
+        description: Provide InputHead Details
+        parameters:
+           - in: header
+             name: x-access-token
+             description: token issued after successful login
+             required: true
+             schema:
+                 type: string 
+                 
+           - in: header
+             name: Content-Type
+             required: true
+             description: Content-Type of the request. Should be 'application/json'
+             schema:
+               type: string
+               
+           - in: header
+             name: Accept
+             required: true
+             description: Response Format that caller expects. Should be 'application/json'
+             schema:
+               type: string
+             
+           - in: query
+             name: vim
+             description: Name of the VIM(Virtualized Infrasturcture Manager).
+             required: true
+             schema:
+                 type: string
+                 
+           - in: query
+             name: orch
+             description: Name of the Orchestrator
+             required: true
+             schema: 
+               type: string
+               
+           - in: query
+             name: inputHead
+             description: one of the predefined inputHeads
+             required: true
+             schema:
+                 type: string
+        responses:
+          '200':
+             description: Provide InputHead Details for vim + Orch + inputHead combination
+             content: 
+               application/json:
+                 schema:
+                   $ref: '#/components/schemas/InputHeadDetailsResponse'
+          '400':
+             description: Response when token is missing or request params are incorrect
+             content:
+               application/json:
+                 schema:
+                   oneOf:
+                     - $ref: '#/components/schemas/TokenMissing'
+                     - $ref: '#/components/schemas/MissingInputHeadDetailsVIMArg'
+                     - $ref: '#/components/schemas/MissingInputHeadDetailsorchArg'
+                     - $ref: '#/components/schemas/MissingInputHeadDetailsIHArg'
+          '401':
+             description: Response when token is invalid or expired
+             content:
+                application/json:
+                  schema:
+                     $ref: '#/components/schemas/AuthError'
+          '403':
+             description: Response when user is already logged out. And is not authorized to perform operation
+             content:
+               application/json:
+                  schema:
+                    $ref: '#/components/schemas/LoggedOutError'        
+          '415':
+              description: response in case header has content type other than 'application/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/ContentTypeError'
+          '406':
+              description: response in case header has Accept type other than 'appliction/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/AcceptTypeError'          
+ 
+  /blueprint:
+      post:
+        tags: 
+          - blueprint
+        summary: Generate blueprint package 
+        description: Generate Blueprint package
+        parameters: 
+          - in: header
+            name: x-access-token
+            description: jwt token issued after successful login
+            required: true
+            schema:
+              type: string
+              
+          - in: header
+            name: Content-Type
+            required: true
+            description: Content-Type of the request. Should be 'multipart/form-data'
+            schema:
+              type: string
+               
+          - in: header
+            name: Accept
+            required: true
+            description: Response Format that caller expects. Should be 'application/json'
+            schema:
+              type: string
+        
+        requestBody:
+          required: true
+          content: 
+            multipart/form-data:
+              schema: 
+                type: object
+                properties: # Request parts
+                   env_type:
+                     
+                     type: string
+                   orch_type:
+                     type: string
+                   vnfd_name:
+                     type: string
+                   vnf_name:
+                     type: string
+                   vnf_type:
+                     type: string
+                   image:
+                     type: string
+                   ram:
+                     type: string
+                   cpu: 
+                     type: string
+                   disk:
+                     type: string
+                   Interfaces1_name:
+                     type: string
+                   create: 
+                     type: string
+                   config:
+                     type: string
+                   delete:
+                     type: string
+                   cloud_init_file:
+                     type: string
+        responses:
+          '200':
+             description: Response for successful package generation
+             content:
+               application/zip:
+                 schema:
+                   $ref: '#/components/schemas/packagestructure'
+        
+          '400':
+             description: Response when token is missing or request params are incorrect
+             content:
+                application/json:
+                   schema:
+                     oneOf:
+                      - $ref: '#/components/schemas/TokenMissing'
+                      - $ref: '#/components/schemas/MissingInputHeadDetailsVIMArg'
+                      - $ref: '#/components/schemas/MissingInputHeadDetailsorchArg'
+                      - $ref: '#/components/schemas/MissingInputHeadDetailsIHArg'
+          '401':
+             description: Response when token is invalid or expired
+             content:
+                application/json:
+                  schema:
+                     $ref: '#/components/schemas/AuthError'
+          '403':
+             description: Response when user is already logged out. And is not authorized to perform operation
+             content:
+               application/json:
+                  schema:
+                    $ref: '#/components/schemas/LoggedOutError'        
+          '415':
+              description: response in case header has content type other than 'application/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/ContentTypeError'
+          '406':
+              description: response in case header has Accept type other than 'appliction/json'
+              content:
+                 application/json:
+                   schema:
+                     $ref: '#/components/schemas/AcceptTypeError'          
+ 
+  
+components:
+  schemas:
+    ContentTypeError:
+      type: object
+      properties:
+        Error:
+          type: string
+      example:
+        {
+          "Error": "Bad Request. Content-Type should be \"application/json\""
+        }
+    AcceptTypeError:
+      type: object
+      properties:
+        Error:
+          type: string
+      example:
+        {
+           "Error": "Bad Request. API won't generate Client's prefferred media type"
+        }
+    TokenMissing:
+      type: object
+      properties: 
+        Error:
+          type: string
+      example:
+        {
+          "Error": "token is missing"
+        }
+    LoggedOutError:
+      type: object
+      properties:
+        Error:
+          type: string
+      example:
+        {
+           'Error' : 'User is Logged out.No longer authorized to perform operation.'
+        }
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      example:    
+        {  "username" : "admin",
+           "password" : "admin"
+        }    
+    LoginErrorEmptyRequest:
+      type: object
+      properties:
+        Error:
+          type: string
+        status:
+          type: string
+      example:
+        {
+            "Error" : "Empty Request Body"
+             
+        }
+    LoginErrorIncompleteRequestBody: 
+      type: object
+      properties:
+        Error:
+          type: string
+        status:
+          type: string
+      example:
+        {
+          "Error": "Bad Request or UserName or Password Missing in request data"
+          
+        }   
+      
+    LoginResponse:
+      type: object
+      properties:
+         token:
+           type: string
+         status:
+            type: string
+      example:
+        {
+           "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imtpc2hvciIsImV4cCI6MTUyNDA0MjQ2NX0.akXjBINT-kj9b4WRFgY8dXOLP2liB2ftKWvo9C9m_FA"
+        }
+    LogoutResponse:
+      type: object
+      properties:
+        Success:
+          type: string
+      example:
+        {
+           "Success": "user admin is logged out"
+        }
+         
+    AuthError:
+      type: object
+      properties:
+        Error: 
+          type: string
+      example:
+        {
+          "Error": "invalid token or token expired"
+        }
+        
+    RegisterNewUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        emailaddress:
+          type: string
+        password:
+          type: string
+        confirmpassword:
+          type: string
+    
+    RegisterNewUserResponse:
+      type: object
+      properties:
+        success:
+          type: string
+      example:
+        {
+          "Success": "Registration succeeded for user admin"
+        }
+    
+    RegisterUserIncorrectParams:
+      type: object
+      properties:
+        Error:
+          type: string
+      example:
+        {
+          "Error": "Incorrect parameters in request body"
+        }
+    UserExistsError:
+      type: object
+      properties:
+        Error:
+          type: string
+      example:
+        {
+          "Error" : "Registration Failed.User or Email ID exists."
+        }
+    
+    ForgetPasswordRequest:
+      type: object
+      properties:
+        username:
+          type: string
+      example:
+        {
+          "username": "admin"
+          
+        }
+        
+    ForgetPasswordResponse:
+      type: object
+      properties:
+        success:
+          type: string
+      
+    ForgetPasswordFailureResponse1:
+      type: object
+      properties:
+        Error: 
+          type: string
+        status: 
+          type: string
+    ForgetPasswordFailureResponse2:
+      type: object
+      properties:
+        Error:
+          type: string
+        status:
+          type: string
+    VIMSResponse:
+      type: object
+      properties:
+        Success:
+          type: string
+        status:
+          type: array
+      example:
+        {
+
+             "Success": "List of Supported VIMS",
+             "VIMS": [
+                      "vCloud Director",
+                      "OpenStack"
+                    ]
+
+        }
+          
+    OrchestratorsResponse:
+      type: object
+      properties:
+        success:
+          type: string
+        Orchestrators:
+          type: array
+      example:
+        {
+          "Orchestrators": [
+          "OSM 3.0",
+          "Cloudify 3.4",
+          "Cloudify 4.0",
+          "RIFT.ware 5.3",
+          "TOSCA 1.1"
+          ],
+          
+          "Success": "List of Supported Orchestrators"
+        }
+    MissingVIMArg:
+      type: object
+      properties:
+        Error:
+          type: string
+      example:
+        {
+         "Error": "Expected argument vim not provided"
+        }
+    VNFTypesResponse:
+      type: object
+      properties:
+        success:
+          type: string
+        VNF Types:
+          type: array
+      example:
+        {
+          "Success": "List of Supported VNFs",
+          "VNF Types": [
+                         "vRouter",
+                         "Firewall",
+                         "LoadBalancer",
+                         "Qos",
+                         "vEPC",
+                         "vMS",
+                         "Others"
+                      ]
+        }
+        
+    InputHeadsResponse:
+      type: object
+      properties:
+        success:
+          type: string
+        status:
+          type: string
+    MissingInputHeadArg:
+      type: object
+      properties:
+        Error:
+         type: string
+      example:
+        {
+          
+          "InputHeads": [
+              "VNF Parameters",
+              "NIC Parameters",
+              "EPA Parameters",
+              "Upload Scripts"
+          ],
+          "Success": "Retrieved InputHeads for vim:vCloud Director and Orch:OSM 3.0"
+          }
+        
+    InputHeadDetailsResponse:    
+      type: object
+      properties:
+        success:
+          type: string
+        status:
+          type: string
+          
+    MissingInputHeadDetailsVIMArg:
+      type: object
+      properties:
+        Error:
+          type: string
+    MissingInputHeadDetailsorchArg:
+      type: object
+      properties:
+        Error:
+          type: string
+    MissingInputHeadDetailsIHArg:
+      type: object
+      properties:
+        Error:
+          type: string
+    packagestructure:
+      type: object
+      properties:
+        bluprintyamlfile:
+          type: string
+          description: this is a VNF Description (blueprint) file
+        nsdyamlfile:
+          type: string
+          description: This is Network Descriptor. This is generated for OSM and riftware.
+        scripts:
+          type: string
+          description: This folder contains files for VNF Creation/deletation/configuration
+    
+
