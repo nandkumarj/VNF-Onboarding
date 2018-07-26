@@ -82,18 +82,26 @@ module.exports = function ($http) {
       flavorname: ['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','','']
     };
 	
-	 _networkConfiguration = {
-          numberOfNetworks: 1,
-	  mgmtNetwork:'',
-	  SubnetCidr:'',
-	  mgmtNetworkEthernetType:'',
-          Networks: ['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
-	  NewNetwork:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
-	  Subnet:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
-          NetworkIndices: [0, 1, 2, 3, 4, 5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],
-	  NetworksType: ['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
-	  EthernetType: ['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
-          create_mgmt_network : false
+    _networkConfiguration = {
+	numberOfNetworks: 1,
+        mgmtNetwork:'',
+	SubnetCidr:'',
+	mgmtNetworkEthernetType:'',
+	Networks: ['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	NewNetwork:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	Subnet:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	Edge_Gateway:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	Network_Name:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	Static_Range:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	Netmask:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	Gateway_IP:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	DNS:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	DNS_Suffix:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	DHCP_Range:['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	NetworkIndices: [0, 1, 2, 3, 4, 5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],
+	NetworksType: ['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	EthernetType: ['', '', '', '', '','','', '', '', '', '','','', '', '', '', '','','',''],
+	create_mgmt_network : false
     };
 	
     _nicDefinition = {
@@ -593,6 +601,54 @@ module.exports = function ($http) {
 			  inputs.vim_params['Subnet_Network' + ( i + 1 ) ] = _networkConfiguration.Subnet[i];
 		  }
 		}
+
+	for (let i = 0; i <_networkConfiguration.Edge_Gateway.length; i++){
+		  if (_networkConfiguration.NewNetwork[i]){
+			  inputs.vim_params['Edge_Gateway_Network' + ( i + 1 ) ] = _networkConfiguration.Edge_Gateway[i];
+		  }
+		}
+
+	for (let i = 0; i <_networkConfiguration.DNS_Suffix.length; i++){
+		  if (_networkConfiguration.NewNetwork[i]){
+			  inputs.vim_params['DNS_Suffix_Network' + ( i + 1 ) ] = _networkConfiguration.DNS_Suffix[i];
+		  }
+		}
+
+	for (let i = 0; i <_networkConfiguration.DNS.length; i++){
+		  if (_networkConfiguration.NewNetwork[i]){
+			  inputs.vim_params['DNS_Network' + ( i + 1 ) ] = _networkConfiguration.DNS[i];
+		  }
+		}
+
+	for (let i = 0; i <_networkConfiguration.Gateway_IP.length; i++){
+		  if (_networkConfiguration.NewNetwork[i]){
+			  inputs.vim_params['Gateway_IP_Network' + ( i + 1 ) ] = _networkConfiguration.Gateway_IP[i];
+		  }
+		}
+
+	for (let i = 0; i <_networkConfiguration.Netmask.length; i++){
+		  if (_networkConfiguration.NewNetwork[i]){
+			  inputs.vim_params['Netmask_Network' + ( i + 1 ) ] = _networkConfiguration.Netmask[i];
+		  }
+		}
+
+	for (let i = 0; i <_networkConfiguration.Network_Name.length; i++){
+		  if (_networkConfiguration.NewNetwork[i]){
+			  inputs.vim_params['Network_Name_Network' + ( i + 1 ) ] = _networkConfiguration.Network_Name[i];
+		  }
+		}
+
+	for (let i = 0; i <_networkConfiguration.Static_Range.length; i++){
+		  if (_networkConfiguration.NewNetwork[i]){
+			  inputs.vim_params['Static_Range' + ( i + 1 ) ] = _networkConfiguration.Static_Range[i];
+		  }
+		}
+
+	for (let i = 0; i <_networkConfiguration.DHCP_Range.length; i++){
+		  if (_networkConfiguration.NewNetwork[i]){
+			  inputs.vim_params['DHCP_Range_Network' + ( i + 1 ) ] = _networkConfiguration.DHCP_Range[i];
+		  }
+	}
 
 	for (let i = 0; i <_networkConfiguration.NetworksType.length; i++){
 		  if (_networkConfiguration.NetworksType[i]){

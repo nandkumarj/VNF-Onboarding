@@ -62,6 +62,17 @@ require('imports-loader?$=>jQuery!jquery-ui-sortable-npm');
 	 this.indices = config.NetworkIndices;
 	 this.Interfaces = config.NewNetwork;
 	 this.Subnet = config.Subnet;
+	 this.SubnetCidr = config.SubnetCidr;
+
+         this.Edge_Gateway = config.Edge_Gateway;
+         this.Network_Name = config.Network_Name;
+         this.Static_Range = config.Static_Range;
+         this.Netmask = config.Netmask;
+         this.Gateway_IP = config.Gateway_IP;
+         this.DNS = config.DNS;
+         this.DNS_Suffix = config.DNS_Suffix;
+         this.DHCP_Range = config.DHCP_Range;
+
          this.mgmtNetwork = config.mgmtNetwork;
          this.SubnetCidr = config.SubnetCidr;
 	 this.EthernetType = config.EthernetType;
@@ -92,9 +103,9 @@ require('imports-loader?$=>jQuery!jquery-ui-sortable-npm');
 	 }
 	 
 	 this.NewNetwk = true;
-          if (this.OrchType == 'TOSCA 1.1') {
-                 this.NewNetwk = false;
-         }
+         // if (this.OrchType == 'TOSCA 1.1') {
+         //        this.NewNetwk = false;
+        // }
 	 
 	 console.log("possibleInterfaces");
 	 console.log(this.possibleInterfaces);
@@ -125,12 +136,32 @@ require('imports-loader?$=>jQuery!jquery-ui-sortable-npm');
               return false;
            } 
          };
+	
+	 this.isTOSCA = function() {
+            if(this.OrchType == 'TOSCA 1.1'){
+               return true;
+            }
+           else{
+              return false;
+           }
+         };
+
+         this.isMgmtNwt = function(){
+		if(this.OrchType == 'None' || this.OrchType == 'Cloudify 3.4' || this.OrchType == 'Cloudify 4.0'){
+			return false;
+		}
+		else{
+			return true;
+		}
+	}
 
 	 this.isOS_Subnet = function(){
               if((this.VIMType == 'OpenStack') &&
-                        (this.OrchType == 'None' || this.OrchType == 'Cloudify 3.4' || this.OrchType == 'Cloudify 4.0' )){
+                        (this.OrchType == 'None' || this.OrchType == 'Cloudify 3.4' || this.OrchType == 'Cloudify 4.0'  || this.OrchType == 'TOSCA 1.1' )){
                  return true;
-              }
+              } else if (this.VIMType == 'vCloud Director' && this.OrchType == 'TOSCA 1.1'){
+		 return true;
+	      }
               else{
                  return false;
               }
@@ -205,8 +236,10 @@ require('imports-loader?$=>jQuery!jquery-ui-sortable-npm');
        for(let index = lastIndex; index >= prelastIndex; index--) {
          this.NICshow[$scope._localIndices[index]] = this.numberOfNICs > index;
        }
+      
+	
      });
-
+      
       this.forms = {};
       this.formSubmit = false;
       // ########
@@ -215,7 +248,7 @@ require('imports-loader?$=>jQuery!jquery-ui-sortable-npm');
 
       var isValid = this.forms.nicDefinitionForm.$valid;
       this.mgmtValid = true;
-      if(!this.isOS_Subnet() && ((typeof this.mgmtNetwork == 'undefined') || (this.mgmtNetwork ==""))){
+      if(this.isMgmtNwt() && ((typeof this.mgmtNetwork == 'undefined') || (this.mgmtNetwork ==""))){
           this.mgmtValid = false;
 	}
 	  var validCnt = 0;
@@ -227,11 +260,32 @@ require('imports-loader?$=>jQuery!jquery-ui-sortable-npm');
 		}
            } else{ isValid = false; }
 
-	  
-	   if( (isValid || (this.numberOfNICs == validCnt++)) && this.mgmtValid ){
+	 
+           this.subnetCnt = 0;
+	   if(this.isOS_Subnet()){
+		
+		for (i = 0; i < this.numberOfNICs; i++) { 
+
+		   if(this.Interfaces[i] && ((typeof this.Subnet[i] == 'undefined') || (this.Subnet[i] == ""))){
+			this.subnetCnt++;		   	
+
+		    //}else if (){
+
+			
+		    }
+			
+		   console.log(this.subnetCnt); 
+		}
+
+
+	   }  
+	   if( (isValid || (this.numberOfNICs == validCnt++)) && this.mgmtValid && (this.subnetCnt == 0)){
 	   	isValid = true ;
 	   }
 	  //alert(isValid)
+
+      
+
 	
       if( isValid ) {
 		  
@@ -274,7 +328,7 @@ require('imports-loader?$=>jQuery!jquery-ui-sortable-npm');
 				
 			}
 
-			if(this.isOS_Cloudify()){
+			if(!this.isMgmtNwt()||  this.isTOSCA()){
 				$scope.EthernetTypeSelected[i] = "";
 			}
 			
@@ -290,13 +344,16 @@ require('imports-loader?$=>jQuery!jquery-ui-sortable-npm');
 				$scope.NetworksTypeSelected[i] = "";
 				
 			}
-			if(this.isOS_Cloudify()){
+			if(!this.isMgmtNwt() ||  this.isTOSCA()){
                                 $scope.NetworksTypeSelected[i] = ""; 
                         }
 
 			
 		}
 		
+                 if(!this.isMgmtNwt() ||  this.isTOSCA()){
+                         $scope.mgmtNetworkEthernetTypeSelected  = "";
+                        }
 		
 		const config = {
                  numberOfNetworks: this.numberOfNICs,
@@ -309,7 +366,15 @@ require('imports-loader?$=>jQuery!jquery-ui-sortable-npm');
                  EthernetType : $scope.EthernetTypeSelected,
 		 NetworksType : $scope.NetworksTypeSelected,
                  mgmtNetworkEthernetType : $scope.mgmtNetworkEthernetTypeSelected,
-                 create_mgmt_network : this.createMgmtNetwork
+                 create_mgmt_network : this.createMgmtNetwork,
+                 Edge_Gateway : this.Edge_Gateway,
+                 Network_Name : this.Network_Name,
+                 Static_Range : this.Static_Range,
+                 Netmask : this.Netmask,
+                 Gateway_IP : this.Gateway_IP,
+                 DNS : this.DNS,
+                 DNS_Suffix : this.DNS_Suffix,
+                 DHCP_Range : this.DHCP_Range
        };
 
         dataService.setNETC( config);

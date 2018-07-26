@@ -64,7 +64,8 @@ TEMPLATES = {'OpenStack': 'OS-template.yaml',
              'MultiVDU-vCloud Director-OSM' : 'MultiVDU-VCD-OSM-template.yaml' ,
              'MultiVDU-vCloud Director-OSM-NSD' : 'MultiVDU-VCD-OSM-NSD-template.yaml',
              'MultiVDU-OpenStack-OSM' : 'MultiVDU-OS-OSM-template.yaml' ,
-             'MultiVDU-OpenStack-OSM-NSD' : 'MultiVDU-OS-OSM-NSD-template.yaml'}
+             'MultiVDU-OpenStack-OSM-NSD' : 'MultiVDU-OS-OSM-NSD-template.yaml',
+	     'MultiVDU-OS-HEAT' : 'MultiVDU-OS-HEAT-template.yaml'}	
 
 session_dir = ''
 multivdu_inputs = {}
@@ -194,11 +195,9 @@ def GetHashofDirs(directory, verbose=0):
 def create_vmdk_package(inputs, name, workdir):
     vmdk_dir = os.path.join(workdir, name + '_vmdk')
     os.mkdir(vmdk_dir)
-    generate_standard_vmdk_blueprint(inputs, inputs['params'], vmdk_dir, name)
-    if get_flavor_type(inputs['params']) == 'auto':
-        generate_flavor_blueprint(inputs, inputs['params'], workdir, name)
-    create_vmdk_manifest_file(name+'_vmdk', vmdk_dir)
-    add_scripts(inputs['params'], vmdk_dir)   
+    generate_standard_vmdk_blueprint(inputs,vmdk_dir, name)
+    #create_vmdk_manifest_file(name+'_vmdk', vmdk_dir)
+    #add_scripts(inputs['params'], vmdk_dir)   
     i = datetime.now()
     readme="VMDK descriptor package is generated. \nCreated on " + i.strftime('%Y/%m/%d %H:%M:%S')
     readme_file = os.path.join(vmdk_dir, 'README.txt') 
@@ -413,7 +412,37 @@ def populate_distinct_cloudify_networks(inputs):
           netname = inputs['vim_params'][paramskey]
           print "populate distinct networks = {}".format(str(netname))
 	  if newnetkey in inputs['vim_params']:
-	     inputs['vim_params']['NeworOldNetwork'][str(netname)] = str(inputs['vim_params']['Subnet_' + commonkey ])  
+             if get_env_types(inputs) == 'OpenStack':
+	        inputs['vim_params']['NeworOldNetwork'][str(netname)] = str(inputs['vim_params']['Subnet_' + commonkey ])  
+             else:
+	        inputs['vim_params']['NeworOldNetwork'][str(netname)] = str(inputs['vim_params']['Edge_Gateway_' + commonkey ])  
+    print "Cloudify distinct networks inputs:{}".format(inputs)
+
+def populate_distinct_tosca_networks(inputs):
+    # Data structures to populate  information for New networks in Cloudify
+    inputs['vim_params']['NeworOldNetwork'] = {}
+    for paramskey in inputs['vim_params'].keys():
+        print "paramskey = {}".format(paramskey)
+        if re.match('Network(\d+)_name',paramskey):
+          commonkey = paramskey.split('_')[0]
+          print "commonkey={}".format(commonkey)
+          newnetkey = 'Create ' + commonkey
+          print "newnetykey = {}".format(newnetkey)
+          netname = inputs['vim_params'][paramskey]
+          print "populate distinct networks = {}".format(str(netname))
+          if newnetkey in inputs['vim_params']:
+#             if get_env_types(inputs) == 'OpenStack':
+             inputs['vim_params']['NeworOldNetwork'][str(netname)] = str(inputs['vim_params']['Subnet_' + commonkey ])
+#             else:
+#                inputs['vim_params']['NeworOldNetwork'][str(netname)] = str(inputs['vim_params']['Edge_Gateway_' + commonkey ])
+
+        mgmt_network = inputs['vim_params']['mgmt_network']
+        print "Management network Value: ", inputs['vim_params']['create_mgmt_network']
+        if inputs['vim_params']['create_mgmt_network'] == True: 
+           #inputs['vim_params']['NeworOldNetwork'][mgmt_network] = inputs['vim_params']['create_mgmt_network']
+           inputs['vim_params']['NeworOldNetwork'][mgmt_network] = inputs['vim_params']['subnet_cidr']
+
+    print "TOSCA distinct networks inputs:{}".format(inputs)
 
 def add_scripts_osm(params,workdir):
     scripts_dir = os.path.join(workdir, 'scripts')
@@ -443,6 +472,33 @@ def add_scripts_osm(params,workdir):
                #shutil.copy(full_file_name, scripts_dir)
                shutil.copy(full_file_name, cloud_init_dir)
 
+def add_scripts_HEAT(params,workdir):
+    scripts_dir = os.path.join(workdir, 'scripts')
+    #cloud_init_dir = os.path.join(workdir, 'cloud_init')
+    if not os.path.exists((os.path.join(workdir,'scripts'))):
+       scripts_dir = os.path.join(workdir,'scripts')
+       print("gb:scripts_dir:",scripts_dir)
+       os.mkdir(scripts_dir)
+
+    #if not os.path.exists((os.path.join(workdir,'cloud_init'))):
+    #   scripts_dir = os.path.join(workdir,'cloud_init')
+    #   print("gb:scripts_dir:",cloud_init_dir)
+    #   os.mkdir(scripts_dir)
+
+    upload_dir = os.path.join('/tmp/uploads',params['username'])
+    upload_scripts_dir = os.path.join(upload_dir,params['session_key'])
+    print("gb:upload_scripts_dir:",upload_scripts_dir)
+    if os.path.isdir(upload_scripts_dir):
+       src_files = os.listdir(upload_scripts_dir)
+       print("gb:list uploaded files:",src_files)
+       for file_name in src_files:
+           full_file_name = os.path.join(upload_scripts_dir, file_name)
+           #print("Check create dict:%s",params[i]['scripts']);
+           print("gb:full file name:",full_file_name)
+           if (os.path.isfile(full_file_name)):
+               print("print file name %s\n", os.path.basename(full_file_name))
+               shutil.copy(full_file_name, scripts_dir)
+               #shutil.copy(full_file_name, cloud_init_dir)
 
 	
 def get_hash(fname, algo):
@@ -738,23 +794,61 @@ def generate_riftio_package(params, workdir, name, create_nsd=True):
         The files have already been copied to the correct folder inside the tar.gz package
     '''
     shutil.rmtree(cinit_scripts_dir)
-    
-def generate_standard_vmdk_blueprint(inputs, params, workdir, name):
-    template = get_template(os.path.join(TEMPLATES_DIR, TEMPLATES['NONE_' + params['env_type']]))
+
+
+def generate_standard_vmdk_blueprint(params, workdir, name):
+    template = get_template(os.path.join(TEMPLATES_DIR, TEMPLATES['NONE_' + params['vim_params']['env_type']]))
     out = template.render(params)
-    if get_env_types(inputs['params']) == 'OpenStack':
-        out_file = os.path.join(workdir, name + '.yaml')
-    else: 
-        out_file = os.path.join(workdir, name + '.ovf')
+    out_file = os.path.join(workdir, name + '.ovf')
     with open(out_file, 'w') as f:
         f.write(out)
-
+    
 def generate_standard_heat_blueprint(params, workdir, name):
     template = get_template(os.path.join(TEMPLATES_DIR, TEMPLATES['NONE_' + params['env_type']]))
     out = template.render(params)
     out_file = os.path.join(workdir, name + '.yaml')
     with open(out_file, 'w') as f:
         f.write(out)
+
+def generate_basic_HEAT_template(inputs,workdir,name):
+    print "reached generate_basic_HEAT_template"
+    populate_heat_network_info(inputs)
+    add_scripts_HEAT(inputs,workdir)
+    template = get_template(os.path.join(TEMPLATES_DIR, TEMPLATES['MultiVDU-OS-HEAT']))
+    out = template.render(inputs)
+    out_file = os.path.join(workdir, name + '.yaml')
+    with open(out_file, 'w') as f:
+        f.write(out)
+
+def populate_heat_network_info(inputs):
+    inputs['vim_params']['NewNetworks'] =  {}
+    for paramskey in inputs['vim_params'].keys():
+         print "paramskey = {}".format(paramskey)
+         if re.match('Network(\d+)_name',paramskey):
+            commonkey = paramskey.split('_')[0]
+            print "commonkey={}".format(commonkey)
+            netnum = re.search('Network(.+)',commonkey).group(1)
+            netname = inputs['vim_params'][paramskey]
+            newnetkey = 'Create ' + commonkey
+            print "newnetykey = {}".format(newnetkey)
+            print "populate distinct networks = {}".format(str(netname))
+            print "newnetykey = {}".format(newnetkey)
+            if newnetkey in inputs['vim_params']:
+               inputs['vim_params']['NewNetworks'][str(netname)] = str(inputs['vim_params']['Subnet_' + commonkey ])
+    vmnum = 0
+    for vmdata in inputs['params']:
+       if vmdata['flavor'] == '2':
+          vmdata['flavor'] = 'm1.small'
+       elif vmdata['flavor'] == '3':
+          vmdata['flavor'] = 'm1.medium'
+       elif vmdata['flavor'] == '4':
+          vmdata['flavor'] = 'm1.large'
+       if'create' in   vmdata['scripts']:
+          if 'cloud_init_file' not in vmdata and vmdata['scripts']['create'][vmnum] != '':
+              vmdata['cloud_init_file'] = ''
+              vmdata['cloud_init_file'] = vmdata['scripts']['create'][vmnum]
+       vmnum += 1
+
 
 def generate_standard_tosca_blueprint(params, workdir, name):
     template = get_template(os.path.join(TEMPLATES_DIR, TEMPLATES['TOSCA_' + params['vim_params']['env_type']]))
@@ -866,11 +960,13 @@ def create_blueprint_package(inputs):
         cleanup(workdir)
 
 def create_multivdu_blueprint_package(inputs):
+    if get_orch_types(inputs) == 'None':
+       inputs['vim_params']['orch_type'] = 'HEAT'
     name, workdir = gen_name_and_workdir(inputs)
     try:
        create_work_dir(workdir)
        #if get_orch_types(inputs['params']) not in ['OSM 3.0', 'RIFT.ware 5.3', 'NONE']:
-       if get_orch_types(inputs) not in ['OSM 3.0', 'RIFT.ware 5.3', 'NONE']:
+       if get_orch_types(inputs) not in ['OSM 3.0', 'RIFT.ware 5.3', 'HEAT', 'Ovf']:
           add_scripts(inputs, workdir)
           copy_README(inputs, workdir)
        print "The input parameter is ", get_orch_types(inputs)
@@ -906,18 +1002,43 @@ def create_multivdu_blueprint_package(inputs):
                Process=subprocess.call(['./git_upload.sh', output_file, workdir, commit_comment, orch_name, env_name, vnf_name])
            return output_file, workdir
        elif get_orch_types(inputs) == 'TOSCA 1.1':
-            generate_standard_tosca_blueprint(inputs, workdir, name)
-            if get_env_types(inputs) == 'OpenStack':
-               for vm in inputs['params']:
-                   print "data ****************", vm['flavor']
-                   if vm['flavor'] == 'auto':
-                       generate_flavor_blueprint(inputs,workdir, name)
-            copy_inputs_template(inputs, workdir)
-            output_file = create_package(name, workdir)
-            if get_git_flag(inputs) == True:
-                 print "The git flag inside ", get_git_flag(inputs)
-                 Process=subprocess.call(['./git_upload.sh', output_file, workdir, commit_comment, orch_name, env_name])
-            return output_file, workdir
+           populate_distinct_tosca_networks(inputs)
+           generate_standard_tosca_blueprint(inputs, workdir, name)
+#           if get_env_types(inputs['params']) == 'OpenStack':
+#               if get_flavor_type(inputs['params']) == 'Custom Flavor':
+ #                  generate_flavor_blueprint(inputs, inputs['params'], workdir, name)
+           copy_inputs_template(inputs, workdir)
+           output_file = create_package(name, workdir)
+           print "Got the output file", output_file
+           print "Got the working directory",workdir
+           print "The git flag outside ", get_git_flag(inputs)
+           if get_git_flag(inputs) == True:
+                print "The git flag inside ", get_git_flag(inputs)
+                Process=subprocess.call(['./git_upload.sh', output_file, workdir, commit_comment, orch_name, env_name])
+           return output_file, workdir
+       elif get_orch_types(inputs) == 'Ovf':
+           vmdk_package=create_vmdk_package(inputs, name, workdir)
+           output_file = create_package(name, workdir)
+           print "The git flag outside ", get_git_flag(inputs['params'])
+           if get_git_flag(inputs['params']) == True:
+              print "The git flag inside ", get_git_flag(inputs['params'])
+              Process=subprocess.call(['./git_upload.sh', output_file, workdir, commit_comment, orch_name, env_name, vnf_name])
+           return output_file, workdir
+       elif get_orch_types(inputs) == 'HEAT':
+           if get_env_types(inputs) == 'OpenStack':
+               #generate_standard_heat_blueprint(inputs['params'], workdir, name)
+               generate_basic_HEAT_template(inputs,workdir,name)
+               #if get_flavor_type(inputs['params']) == 'Custom Flavor':
+               # generate_flavor_blueprint(inputs, inputs['params'], workdir, name)
+               copy_inputs_template(inputs, workdir)
+               output_file = create_package(name, workdir)
+               print "Got the output file", output_file
+               print "Got the working directory",workdir
+               print "The git flag outside ", get_git_flag(inputs)
+               if get_git_flag(inputs) == True:
+                  print "The git flag inside ", get_git_flag(inputs)
+                  Process=subprocess.call(['./git_upload.sh', output_file, workdir, commit_comment, orch_name, env_name])
+               return output_file, workdir 
 
     finally:
        print("inside finally")
